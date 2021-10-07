@@ -1,0 +1,2 @@
+FLASK_APP=shopifyapp
+FLASK_ENV=development
