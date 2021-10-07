@@ -23,4 +23,4 @@ class Masterdb(db.Model):
     validityDate=db.Column(DateTime, default=datetime.datetime.utcnow)
     status = db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
     shopName= db.Column(db.String(150), unique=True, nullable=False)
-    dateCreated=created_date = db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+    dateCreated= db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
