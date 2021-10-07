@@ -12,6 +12,4 @@ class UserService:
         create_user = user_dao.create_new_user(shopURL,firstName,lastName,adminEmail,adminPhone,paymentEnableStatus,subscriptionMode,subscriptionPlanID,validityDate,dateCreated,status,shopName)
         return {"status":create_user}
 
-
-
 user_service = UserService()

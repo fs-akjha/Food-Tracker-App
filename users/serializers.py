@@ -9,3 +9,4 @@ class MasterDBSchema(ma.Schema):
 
 user_schema = MasterDBSchema()
 users_schema = MasterDBSchema(many=True)
+
