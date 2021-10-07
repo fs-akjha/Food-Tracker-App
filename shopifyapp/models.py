@@ -10,7 +10,7 @@ from sqlalchemy import Column, Integer, DateTime
 
 
 
-class Masterdb(db.Model):
+class Clients(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     shopURL = db.Column(db.String(150), unique=True, nullable=False)
     firstName = db.Column(db.String(150),nullable=False)
@@ -28,7 +28,7 @@ class Masterdb(db.Model):
 
 class Tokens(db.Model):
     id=db.Column(db.Integer, primary_key=True)
-    clientID=Column(ForeignKey('masterdb.id'), index=True)
+    clientID=Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
     shopURL = db.Column(db.String(150), unique=True, nullable=False)
     accessToken = Column(String(255), nullable=False)
     validity=db.Column(DateTime, default=datetime.datetime.utcnow)
@@ -36,7 +36,7 @@ class Tokens(db.Model):
 
 class Reward_Points(db.Model):
     id=db.Column(db.Integer, primary_key=True)
-    customerID=db.Column(db.Integer)
+    customerID=Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
     customerEmail=db.Column(db.String(150),nullable=False, unique=True)
     orderNo=db.Column(db.Integer)
     orderValue=db.Column(db.Integer)
@@ -48,7 +48,7 @@ class Reward_Points(db.Model):
 
 class Total_Points(db.Model):
     id=db.Column(db.Integer, primary_key=True)
-    customerID=db.Column(db.Integer)
+    customerID=Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
     customerEmail=db.Column(db.String(150),nullable=False, unique=True)
     totalPointsEarned=db.Column(db.Integer)
     totalPointsRedeemed=db.Column(db.Integer)
@@ -58,7 +58,7 @@ class Total_Points(db.Model):
 
 class Redeem_History(db.Model):
     id=db.Column(db.Integer, primary_key=True)
-    customerID=db.Column(db.Integer)
+    customerID=db.Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
     customerEmail=db.Column(db.String(150),nullable=False, unique=True)
     orderNo=db.Column(db.Integer)
     orderValue=db.Column(db.Integer)
