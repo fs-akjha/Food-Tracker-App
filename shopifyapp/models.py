@@ -24,3 +24,46 @@ class Masterdb(db.Model):
     status = db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
     shopName= db.Column(db.String(150), unique=True, nullable=False)
     dateCreated= db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+
+
+class Tokens(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    clientID=Column(ForeignKey('masterdb.id'), index=True)
+    shopURL = db.Column(db.String(150), unique=True, nullable=False)
+    accessToken = Column(String(255), nullable=False)
+    validity=db.Column(DateTime, default=datetime.datetime.utcnow)
+
+
+class Reward_Points(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    customerID=db.Column(db.Integer)
+    customerEmail=db.Column(db.String(150),nullable=False, unique=True)
+    orderNo=db.Column(db.Integer)
+    orderValue=db.Column(db.Integer)
+    campaignID=db.Column(db.Integer)
+    pointsRewarded=db.Column(db.Integer)
+    status=db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
+    dateCreated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+
+
+class Total_Points(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    customerID=db.Column(db.Integer)
+    customerEmail=db.Column(db.String(150),nullable=False, unique=True)
+    totalPointsEarned=db.Column(db.Integer)
+    totalPointsRedeemed=db.Column(db.Integer)
+    totalPoints=db.Column(db.Integer)
+    dateUpdated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+
+
+class Redeem_History(db.Model):
+    id=db.Column(db.Integer, primary_key=True)
+    customerID=db.Column(db.Integer)
+    customerEmail=db.Column(db.String(150),nullable=False, unique=True)
+    orderNo=db.Column(db.Integer)
+    orderValue=db.Column(db.Integer)
+    campaignID=db.Column(db.Integer)
+    pointsUsed=db.Column(db.Integer)
+    equivalentValue=db.Column(db.Integer)
+    status=db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
+    dateCreated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
