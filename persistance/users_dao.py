@@ -27,7 +27,4 @@ class UserDAO:
         return result
 
 
-
-
-
 user_dao = UserDAO(models.Clients)

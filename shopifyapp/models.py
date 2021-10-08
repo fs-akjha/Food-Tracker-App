@@ -26,44 +26,44 @@ class Clients(db.Model):
     dateCreated= db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 
 
-class Tokens(db.Model):
-    id=db.Column(db.Integer, primary_key=True)
-    clientID=Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
-    shopURL = db.Column(db.String(150), unique=True, nullable=False)
-    accessToken = Column(String(255), nullable=False)
-    validity=db.Column(DateTime, default=datetime.datetime.utcnow)
+# class Tokens(db.Model):
+#     id=db.Column(db.Integer, primary_key=True)
+#     clientID=db.Column(db.Integer)
+#     shopURL = db.Column(db.String(150), unique=True, nullable=False)
+#     accessToken = Column(String(255), nullable=False)
+#     validity=db.Column(DateTime, default=datetime.datetime.utcnow)
 
 
-class Reward_Points(db.Model):
-    id=db.Column(db.Integer, primary_key=True)
-    customerID=Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
-    customerEmail=db.Column(db.String(150),nullable=False, unique=True)
-    orderNo=db.Column(db.Integer)
-    orderValue=db.Column(db.Integer)
-    campaignID=db.Column(db.Integer)
-    pointsRewarded=db.Column(db.Integer)
-    status=db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
-    dateCreated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+# class Reward_Points(db.Model):
+#     id=db.Column(db.Integer, primary_key=True)
+#     customerID=db.Column(db.Integer)
+#     customerEmail=db.Column(db.String(150),nullable=False, unique=True)
+#     orderNo=db.Column(db.Integer)
+#     orderValue=db.Column(db.Integer)
+#     campaignID=db.Column(db.Integer)
+#     pointsRewarded=db.Column(db.Integer)
+#     status=db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
+#     dateCreated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 
 
-class Total_Points(db.Model):
-    id=db.Column(db.Integer, primary_key=True)
-    customerID=Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
-    customerEmail=db.Column(db.String(150),nullable=False, unique=True)
-    totalPointsEarned=db.Column(db.Integer)
-    totalPointsRedeemed=db.Column(db.Integer)
-    totalPoints=db.Column(db.Integer)
-    dateUpdated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+# class Total_Points(db.Model):
+#     id=db.Column(db.Integer, primary_key=True)
+#     customerID=db.Column(db.Integer)
+#     customerEmail=db.Column(db.String(150),nullable=False, unique=True)
+#     totalPointsEarned=db.Column(db.Integer)
+#     totalPointsRedeemed=db.Column(db.Integer)
+#     totalPoints=db.Column(db.Integer)
+#     dateUpdated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 
 
-class Redeem_History(db.Model):
-    id=db.Column(db.Integer, primary_key=True)
-    customerID=db.Column(ForeignKey('clients.id', ondelete='CASCADE'), index=True, nullable=False)
-    customerEmail=db.Column(db.String(150),nullable=False, unique=True)
-    orderNo=db.Column(db.Integer)
-    orderValue=db.Column(db.Integer)
-    campaignID=db.Column(db.Integer)
-    pointsUsed=db.Column(db.Integer)
-    equivalentValue=db.Column(db.Integer)
-    status=db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
-    dateCreated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+# class Redeem_History(db.Model):
+#     id=db.Column(db.Integer, primary_key=True)
+#     customerID=db.Column(db.Integer)
+#     customerEmail=db.Column(db.String(150),nullable=False, unique=True)
+#     orderNo=db.Column(db.Integer)
+#     orderValue=db.Column(db.Integer)
+#     campaignID=db.Column(db.Integer)
+#     pointsUsed=db.Column(db.Integer)
+#     equivalentValue=db.Column(db.Integer)
+#     status=db.Column(Enum('T', 'F'), nullable=False, server_default=text("'T'"))
+#     dateCreated=db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
