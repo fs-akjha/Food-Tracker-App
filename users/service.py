@@ -1,5 +1,5 @@
 from .serializers import user_schema, users_schema
-from persistance.users_dao import user_dao
+from persistance.users_dao import user_dao,child_dao
 import mysql.connector
 
 class UserService:
@@ -8,6 +8,30 @@ class UserService:
         all_users = user_dao.get_all()
         result = users_schema.dump(all_users)
         return ({'users':result})
+
+    def list_all_tokens(self,shopName):
+        all_tokens=child_dao.get_all_tokens(shopName)
+        return {"status":all_tokens}
+
+    def list_all_rward_points(self,shopName):
+        all_tokens=child_dao.get_all_reward_points(shopName)
+        return {"status":all_tokens}
+
+    def list_tokens_byid(self,shopName,clientID):
+        all_tokens=child_dao.list_tokens_byid(shopName,clientID)
+        return {"status":all_tokens}
+
+    def list_rewardpoints_byid(self,shopName,customerID):
+        all_tokens=child_dao.list_rewardpoints_byid(shopName,customerID)
+        return {"status":all_tokens}
+
+    def create_token(self,clientID,shopURL,accessToken,shopName,validity):
+        data=child_dao.create_new_token(clientID,shopURL,accessToken,shopName,validity)
+        return {"status":data}
+
+    def create_reward_points(self,customerID,customerEmail,orderNo,orderValue,campaignID,pointsRewarded,status,dateCreated,shopName):
+        data=child_dao.create_reward_points(customerID,customerEmail,orderNo,orderValue,campaignID,pointsRewarded,status,dateCreated,shopName)
+        return {"status":data}
 
     def create_user(self,shopURL,firstName,lastName,adminEmail,adminPhone,paymentEnableStatus,subscriptionMode,subscriptionPlanID,validityDate,dateCreated,status,shopName):
         create_user = user_dao.create_new_user(shopURL,firstName,lastName,adminEmail,adminPhone,paymentEnableStatus,subscriptionMode,subscriptionPlanID,validityDate,dateCreated,status,shopName)
@@ -26,9 +50,9 @@ class UserService:
         )
         my_new_cursor=new_db.cursor()
         my_new_cursor.execute("CREATE TABLE Tokens (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,clientID INTEGER(10) NOT NULL, shopURL VARCHAR(150) NOT NULL, accessToken VARCHAR(255) NOT NULL, validity date NOT NULL)")
-        my_new_cursor.execute("CREATE TABLE Reward_Points (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, orderNo INTEGER NOT NULL, orderValue INTEGER NOT NULL, campaignID INTEGER NOT NULL,pointsRewarded INTEGER NOT NULL,status enum('M','F') NOT NULL, dateCreated date NOT NULL)")
+        my_new_cursor.execute("CREATE TABLE Reward_Points (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, orderNo INTEGER NOT NULL, orderValue INTEGER NOT NULL, campaignID INTEGER NOT NULL,pointsRewarded INTEGER NOT NULL,status enum('T','F') NOT NULL, dateCreated date NOT NULL)")
         my_new_cursor.execute("CREATE TABLE Total_Points (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, totalPointsEarned INTEGER NOT NULL, totalPointsRedeemed INTEGER NOT NULL, totalPoints INTEGER NOT NULL, dateUpdated date NOT NULL)")
-        my_new_cursor.execute("CREATE TABLE Redeem_History (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, orderNo INTEGER NOT NULL, orderValue INTEGER NOT NULL, campaignID INTEGER NOT NULL, pointsUsed INTEGER NOT NULL, equivalentValue INTEGER NOT NULL, status enum('M','F') NOT NULL, dateCreated date NOT NULL)")
+        my_new_cursor.execute("CREATE TABLE Redeem_History (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, orderNo INTEGER NOT NULL, orderValue INTEGER NOT NULL, campaignID INTEGER NOT NULL, pointsUsed INTEGER NOT NULL, equivalentValue INTEGER NOT NULL, status enum('T','F') NOT NULL, dateCreated date NOT NULL)")
         return {"status":create_user}
 
 user_service = UserService()
