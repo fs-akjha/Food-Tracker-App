@@ -58,6 +58,35 @@ class ChildDAO:
         ext_db.close()
         return "200"
 
+
+    def create_total_points(self,customerID,customerEmail,totalPointsEarned,totalPointsRedeemed,totalPoints,dateUpdated,shopName):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="Insert into total_points(customerID,customerEmail,totalPointsEarned,totalPointsRedeemed,totalPoints,dateUpdated) values({},'{}',{},{},{},'{}')".format(customerID,customerEmail,totalPointsEarned,totalPointsRedeemed,totalPoints,dateUpdated)
+        mycursor.execute(query)
+        ext_db.commit()
+        ext_db.close()
+        return "200"
+
+    def create_redeem_history_points(self,customerID,customerEmail,orderNo,orderValue,campaignID,pointsUsed,equivalentValue,status,shopName,dateCreated):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="Insert into redeem_history(customerID,customerEmail,orderNo,orderValue,campaignID,pointsUsed,equivalentValue,status,dateCreated) values({},'{}',{},{},{},{},{},'{}','{}')".format(customerID,customerEmail,orderNo,orderValue,campaignID,pointsUsed,equivalentValue,status,dateCreated)
+        mycursor.execute(query)
+        ext_db.commit()
+        ext_db.close()
+        return "200"
+
     def get_all_tokens(self,shopName):
         ext_db=mysql.connector.connect(
             host="localhost",
@@ -87,6 +116,66 @@ class ChildDAO:
         )
         mycursor=ext_db.cursor()
         query="SELECT * FROM reward_points"
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
+
+    def list_total_rward_points(self,shopName):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM total_points"
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
+
+    def list_total_reward_points(self,shopName):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM reward_points"
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
+
+    def list_total_redeem_history_data(self,shopName):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM redeem_history"
         mycursor.execute(query)
         columns = mycursor.description
         result = []
@@ -138,6 +227,108 @@ class ChildDAO:
         ext_db.close()
         return result
 
+    def list_totalpoints_byid(self,shopName,customerID):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM total_points where customerID in ({})".format(customerID)
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
+
+
+    def list_redeemhistory_data_byid(self,shopName,customerID):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM redeem_history where customerID in ({})".format(customerID)
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
+
+
+    def list_rewardpoints_bymail(self,shopName,customerEmail):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM reward_points where customerEmail in ('{}')".format(customerEmail)
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
+
+    def list_totalpoints_bymail(self,shopName,customerEmail):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM total_points where customerEmail in ('{}')".format(customerEmail)
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
+
+
+    def list_redeemhistory_data_bymail(self,shopName,customerEmail):
+        ext_db=mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="root",
+            database="{}".format(shopName.lower())
+        )
+        mycursor=ext_db.cursor()
+        query="SELECT * FROM redeem_history where customerEmail in ('{}')".format(customerEmail)
+        mycursor.execute(query)
+        columns = mycursor.description
+        result = []
+        for value in mycursor.fetchall():
+                tmp = {}
+                for (index,column) in enumerate(value):
+                    tmp[columns[index][0]] = column
+                result.append(tmp)
+        ext_db.close()
+        return result
 
 child_dao=ChildDAO()
 user_dao = UserDAO(models.Clients)
