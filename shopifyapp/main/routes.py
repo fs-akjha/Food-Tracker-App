@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for,session
 import time
 from datetime import datetime
+import os
 import datetime
 import requests
 from users.service import user_service
@@ -8,6 +9,9 @@ from shopifyapp.main import main
 import json
 import shopify
 
+
+CLIENT_ID='96c349114caa7250b5a40d534ce0bf27'
+CLIENT_SECRET='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'
 
 
 @main.route('/createuser',methods=['GET','POST'])
@@ -42,9 +46,20 @@ def get_all_users():
 def add_tokens():
     ts = time.time()
     if request.method == "POST":
+            params = {
+                "client_id":'{}'.format(CLIENT_ID),
+                "client_secret":'{}'.format(CLIENT_SECRET),
+                "code": '14dc0dfdbe7cf76df6724b3d761a3839'
+            }
+            shop="fs-rewards-app.myshopify.com"
+            resp = requests.post("https://{}/admin/oauth/access_token".format(shop),data=params)
+            result=resp.json()
+            print(result["access_token"])
+            access_token_value=result["access_token"]
+            print(resp.json())
             clientID=request.json['clientID']
             shopURL=request.json['shopURL']
-            accessToken=request.json['accessToken']
+            accessToken=access_token_value
             shopName=request.json['shopName']
             validity=request.json['validity']
             result=user_service.create_token(clientID,shopURL,accessToken,shopName,validity)
@@ -201,7 +216,7 @@ def connect():
     params = {
         "client_id":'96c349114caa7250b5a40d534ce0bf27',
         "client_secret":'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',
-        "code": 'cd0d65a3ed5d0c21d8c40c5f3411ccb9'
+        "code": '96e2f5f35684ab70046eabd919253b8d'
     }
     shop="fs-rewards-app.myshopify.com"
     resp = requests.post(
