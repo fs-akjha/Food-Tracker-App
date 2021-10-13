@@ -1,17 +1,45 @@
-from flask import Blueprint, render_template, request, redirect, url_for,session
+from flask import Blueprint,request,session,abort
 import time
 from datetime import datetime
-import os
 import datetime
 import requests
 from users.service import user_service
 from shopifyapp.main import main
-import json
-import shopify
+import base64
+import hmac
+import hashlib
+from utils.service import utils
+from Dispatcher.service import dispatcher_data
 
-
+SECRET='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'
 CLIENT_ID='96c349114caa7250b5a40d534ce0bf27'
 CLIENT_SECRET='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'
+
+KEY='221434343320303032302302300'
+
+def verify_webhook(data, hmac_header):    
+    print(CLIENT_ID)
+    digest = hmac.new(SECRET.encode('utf-8'), data, hashlib.sha256).digest()
+    genHmac = base64.b64encode(digest)
+
+    return hmac.compare_digest(genHmac, hmac_header.encode('utf-8'))
+
+
+@main.route('/productCreation', methods=['POST'])
+def hello_world():
+    print('Received Webhook...')
+
+    data = request.data # NOT request.get_data() !!!!!
+    hmac_header = request.headers.get('X-SHOPIFY_HMAC_SHA256')
+    verified = verify_webhook(data, hmac_header)
+    
+    if not verified:
+        return 'Integrity of request compromised...', 401
+    
+    print('Verified request...')
+
+
+
 
 
 @main.route('/createuser',methods=['GET','POST'])
@@ -227,4 +255,3 @@ def connect():
     print(result["access_token"])
     print(resp.json())
     return resp.json()
-    

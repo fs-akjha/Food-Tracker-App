@@ -7,7 +7,6 @@ from shopifyapp.main.base import Session
 from sqlalchemy import func,select
 import mysql.connector
 
-
 class UserDAO:
     def __init__(self, model):
         self.model = model
