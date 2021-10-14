@@ -29,6 +29,9 @@ class UserDAO:
 
 class ChildDAO:
         
+    def __init__(self):
+        self.db=mysql.connector.connect
+    
     def create_new_token(self,clientID,shopURL,accessToken,shopName,validity):
         ext_db=mysql.connector.connect(
             host="localhost",

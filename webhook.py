@@ -1,7 +1,8 @@
 import requests
 import json
 
-webhook_url='http://127.0.0.1:5000/productCreation'
+acces_token='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'
+webhook_url='https://your-development-store.myshopify.com/admin/api/2021-10/webhooks.json'
 data={
     'name':'Akash',
     'Shop':'Test'

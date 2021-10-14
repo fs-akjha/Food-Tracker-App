@@ -3,10 +3,14 @@ import time
 from datetime import datetime
 import datetime
 import requests
+import requests
+import json
+import logging
 from users.service import user_service
 from shopifyapp.main import main
 import base64
 import hmac
+import shopify
 import hashlib
 from utils.service import utils
 from Dispatcher.service import dispatcher_data
@@ -14,32 +18,37 @@ from Dispatcher.service import dispatcher_data
 SECRET='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'
 CLIENT_ID='96c349114caa7250b5a40d534ce0bf27'
 CLIENT_SECRET='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'
+SHOP='fs-rewards-app'
 
-KEY='221434343320303032302302300'
-
-def verify_webhook(data, hmac_header):    
-    print(CLIENT_ID)
-    digest = hmac.new(SECRET.encode('utf-8'), data, hashlib.sha256).digest()
-    genHmac = base64.b64encode(digest)
-
-    return hmac.compare_digest(genHmac, hmac_header.encode('utf-8'))
-
-
-@main.route('/productCreation', methods=['POST'])
-def hello_world():
-    print('Received Webhook...')
-
-    data = request.data # NOT request.get_data() !!!!!
-    hmac_header = request.headers.get('X-SHOPIFY_HMAC_SHA256')
-    verified = verify_webhook(data, hmac_header)
-    
-    if not verified:
-        return 'Integrity of request compromised...', 401
-    
-    print('Verified request...')
+@main.route('/webhook',methods=['POST'])
+def create_webhook():
+    acces_token='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'
+    webhook_url='https://fs-rewards-app.myshopify.com/admin/api/2021-10/webhooks.json'
+    # webhook_url='https://{}:{}@{}.myshopify.com/admin/api/2021-10/webhooks.json'.format(CLIENT_ID,CLIENT_SECRET,SHOP)
+    params={"webhook": 
+    {
+      "topic": "orders/create",
+      "address": "http://127.0.0.1:5000/add_reward_points",
+      "format": "json",
+      "fields" :["id", "note"]
+    }
+}
+    r=requests.post(webhook_url,data=params,headers={'X-Shopify-Access-Token':acces_token})
+    print(r.json())
+    # result=r.json()
+    return r.json()
 
 
 
+@main.route('/shop_resource',methods=['GET'])
+def get_shop_resource():
+    acces_token='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'
+    shop_url='https://fs-rewards-app.myshopify.com/admin/api/2021-10/shop.json'
+    # webhook_url='https://{}:{}@{}.myshopify.com/admin/api/2021-10/webhooks.json'.format(CLIENT_ID,CLIENT_SECRET,SHOP)
+    r=requests.get(shop_url,headers={'X-Shopify-Access-Token':acces_token})
+    print(r.json())
+    # result=r.json()
+    return r.json()
 
 
 @main.route('/createuser',methods=['GET','POST'])
@@ -74,24 +83,33 @@ def get_all_users():
 def add_tokens():
     ts = time.time()
     if request.method == "POST":
-            params = {
-                "client_id":'{}'.format(CLIENT_ID),
-                "client_secret":'{}'.format(CLIENT_SECRET),
-                "code": '14dc0dfdbe7cf76df6724b3d761a3839'
-            }
-            shop="fs-rewards-app.myshopify.com"
-            resp = requests.post("https://{}/admin/oauth/access_token".format(shop),data=params)
-            result=resp.json()
-            print(result["access_token"])
-            access_token_value=result["access_token"]
-            print(resp.json())
-            clientID=request.json['clientID']
-            shopURL=request.json['shopURL']
-            accessToken=access_token_value
-            shopName=request.json['shopName']
-            validity=request.json['validity']
-            result=user_service.create_token(clientID,shopURL,accessToken,shopName,validity)
-            return result,200
+        code='7fa14d27899d9bdbdd46d581ef2d5bd5'
+        code=request.json['code']
+        params = {
+            "client_id":'{}'.format(CLIENT_ID),
+            "client_secret":'{}'.format(CLIENT_SECRET),
+            "code": '{}'.format(code)
+        }
+        shop="fs-rewards-app.myshopify.com"
+        resp = requests.post("https://{}/admin/oauth/access_token".format(shop),data=params)
+        result=resp.json()
+        print(result["access_token"])
+        access_token_value=result["access_token"]
+        shop_url='https://fs-rewards-app.myshopify.com/admin/api/2021-10/shop.json'
+        shop_details=requests.get(shop_url,headers={'X-Shopify-Access-Token':access_token_value})
+        print(shop_details.json())
+        print(resp.json())
+        result1=shop_details.json()
+        print(result1["shop"])
+        print(result1["shop"]["domain"])
+        shop_url=result1["shop"]["domain"]
+        clientID=request.json['clientID']
+        shopURL=shop_url
+        accessToken=access_token_value
+        shopName=request.json['shopName']
+        validity=request.json['validity']
+        result=user_service.create_token(clientID,shopURL,accessToken,shopName,validity)
+        return result,200
     else:
         return ({"message":'Its a Post Request'})
 
