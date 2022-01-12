@@ -1,2 +1,3 @@
-FLASK_APP=shopifyapp
+FLASK_APP=fsconnectapp
+FLASK_ENV=production
 FLASK_ENV=development

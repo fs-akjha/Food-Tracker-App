@@ -1,94 +1,127 @@
-from .serializers import user_schema, users_schema
-from persistance.users_dao import user_dao,child_dao
+from .serializers import plans_schema
+from persistance.users_dao import linkedintokens_dao
 import mysql.connector
+from flask import jsonify
+from datetime import datetime
+import datetime
+import requests
+import time
+import time
+from datetime import date
+import io
+import json
+from users import app
 
 class UserService:
 
-    def list_users(self):
-        all_users = user_dao.get_all()
-        result = users_schema.dump(all_users)
+    def __init__(self):
+        self.db=mysql.connector.connect
+        self.host=app.config['HOST']
+        self.user=app.config['USER']
+        self.password=app.config['PASSWORD']
+
+    def creating_new_token(self,shopurl,CLIENT_ID,shopName,params):
+        ts = time.time()
+        try:
+            import datetime
+            validity=datetime.datetime.today() + datetime.timedelta(days=1)
+            result = user_service.list_users_byshopurl_length(shopurl)
+            print("ksnnksdkskd",result)
+            print(result)
+            if(result<1):
+                clientID=CLIENT_ID
+                resp = requests.post("https://{}.myshopify.com/admin/oauth/access_token".format(shopName),data=params)
+                result=resp.json()
+                print(resp)
+                access_token_value=result["access_token"]
+                shop_url='https://{}/admin/api/2021-10/shop.json'.format(shopurl)
+                accessToken=access_token_value
+                shop_details=requests.get(shop_url,headers={'X-Shopify-Access-Token':access_token_value})
+                shop_url='https://{}.myshopify.com/admin/api/2021-10/shop.json'.format(shopName)
+                r=requests.get(shop_url,headers={'X-Shopify-Access-Token':accessToken})
+                shop_data=r.json()
+                datas=shop_data['shop']
+                shopURL=shopurl
+                firstName=datas['shop_owner']
+                adminEmail=datas['email']
+                paymentEnableStatus=str(datas['eligible_for_payments'])
+                subscriptionPlanID='Trial'
+                validityDate=datetime.datetime.utcnow()
+                dateCreated=datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+                result=user_service.create_user(shopURL,firstName,adminEmail,paymentEnableStatus,subscriptionPlanID,validityDate,dateCreated,shopName)
+                results=user_service.create_token(clientID,shopurl,accessToken,shopName,validity)
+                token_details=user_service.list_all_tokens(shopName)
+                return token_details,200
+            else:
+                pass
+        except:
+            return{"Message":"Either Code Value is Incorrect or Shop Name is Wrong","status":0},400
+
+    def updating_existing_token(self,CLIENT_ID,shopName,params):
+        try:
+            import datetime
+            try:
+                user_service.create_user_after_deletion(shopName)
+            except:
+                print("Database Already There")
+            clientID=CLIENT_ID
+            result = user_service.list_validty_tokens(shopName)
+            token_length=user_service.get_all_tokens_length(shopName)
+            statu=result['status']
+            val=0
+            for i in statu:
+                val=i['validity']
+            valid_date=val
+            current_date=datetime.date.today()
+            print("Yes In Updating Token Part")
+            if valid_date<=current_date:
+                resp = requests.post("https://{}.myshopify.com/admin/oauth/access_token".format(shopName),data=params)
+                result=resp.json()
+                access_token_value=result["access_token"]
+                accessToken=access_token_value
+                print("Updated Access Token Value:- ",accessToken)
+                shopURL='{}.myshopify.com'.format(shopName)
+                validity_date=datetime.datetime.today() + datetime.timedelta(days=1)
+                results=user_service.update_token(shopURL,accessToken,shopName,validity_date)
+                return jsonify(user_service.list_tokens_byid(shopName,clientID))
+            elif(token_length>=1 or token_length==0):
+                resp = requests.post("https://{}.myshopify.com/admin/oauth/access_token".format(shopName),data=params)
+                result=resp.json()
+                access_token_value=result["access_token"]
+                accessToken=access_token_value
+                print("Updated Access Token Value:- ",accessToken)
+                shopURL='{}.myshopify.com'.format(shopName)
+                validityDate=datetime.datetime.utcnow()
+                status=1
+                user_service.update_client_status(shopName,validityDate,status)
+                validity_date=datetime.datetime.today() + datetime.timedelta(days=1)
+                results=user_service.update_token(shopURL,accessToken,shopName,validity_date)
+                return jsonify(user_service.list_tokens_byid(shopName,clientID))
+            else:
+                clientID=CLIENT_ID
+                return jsonify(user_service.list_tokens_byid(shopName,clientID))
+        except:
+            return{"Message":"Kindly give the Correct Code Value if updating the existing Access Token","status":0},400
+    
+
+    def add_plans(self,cat_id,name,icon,cost,caption,dateCreated,plan_data):
+        create_plans = linkedintokens_dao.add_tokens(cat_id,name,icon,cost,caption,dateCreated,plan_data)
+        return {"status":create_plans}
+
+    def get_plan_detail_byid(self,id):
+        token=linkedintokens_dao.get_plan_detail_byid(id)
+        result = plans_schema.dump(token)
         return ({'users':result})
 
-    def list_all_tokens(self,shopName):
-        all_tokens=child_dao.get_all_tokens(shopName)
-        return {"status":all_tokens}
+    def get_plan_detail(self):
+        all_users = linkedintokens_dao.get_plan_detail()
+        result = plans_schema.dump(all_users)
+        return ({'users':result})
 
-    def list_all_rward_points(self,shopName):
-        all_tokens=child_dao.get_all_reward_points(shopName)
-        return {"status":all_tokens}
-
-    def list_total_rward_points(self,shopName):
-        all_tokens=child_dao.list_total_reward_points(shopName)
-        return {"status":all_tokens}
-
-    def list_total_redeem_history_data(self,shopName):
-        all_tokens=child_dao.list_total_redeem_history_data(shopName)
-        return {"status":all_tokens}
-
-    def list_tokens_byid(self,shopName,clientID):
-        all_tokens=child_dao.list_tokens_byid(shopName,clientID)
-        return {"status":all_tokens}
-
-    def list_rewardpoints_byid(self,shopName,customerID):
-        all_tokens=child_dao.list_rewardpoints_byid(shopName,customerID)
-        return {"status":all_tokens}
-
-    def list_totalpoints_byid(self,shopName,customerID):
-        all_tokens=child_dao.list_totalpoints_byid(shopName,customerID)
-        return {"status":all_tokens}
-
-    def list_redeemhistory_data_byid(self,shopName,customerID):
-        all_tokens=child_dao.list_redeemhistory_data_byid(shopName,customerID)
-        return {"status":all_tokens}
-
-    def list_rewardpoints_bymail(self,shopName,customerEmail):
-        all_tokens=child_dao.list_rewardpoints_bymail(shopName,customerEmail)
-        return {"status":all_tokens}
-
-    def list_totalpoints_bymail(self,shopName,customerEmail):
-        all_tokens=child_dao.list_totalpoints_bymail(shopName,customerEmail)
-        return {"status":all_tokens}
-
-    def list_redeemhistory_data_bymail(self,shopName,customerEmail):
-        all_tokens=child_dao.list_redeemhistory_data_bymail(shopName,customerEmail)
-        return {"status":all_tokens}
-
-    def create_token(self,clientID,shopURL,accessToken,shopName,validity):
-        data=child_dao.create_new_token(clientID,shopURL,accessToken,shopName,validity)
-        return {"status":data}
-
-    def create_reward_points(self,customerID,customerEmail,orderNo,orderValue,campaignID,pointsRewarded,status,dateCreated,shopName):
-        data=child_dao.create_reward_points(customerID,customerEmail,orderNo,orderValue,campaignID,pointsRewarded,status,dateCreated,shopName)
-        return {"status":data}
-
-    def create_total_points(self,customerID,customerEmail,totalPointsEarned,totalPointsRedeemed,totalPoints,dateUpdated,shopName):
-        data=child_dao.create_total_points(customerID,customerEmail,totalPointsEarned,totalPointsRedeemed,totalPoints,dateUpdated,shopName)
-        return {"status":data}
-
-    def create_redeem_history_points(self,customerID,customerEmail,orderNo,orderValue,campaignID,pointsUsed,equivalentValue,status,shopName,dateCreated):
-        data=child_dao.create_redeem_history_points(customerID,customerEmail,orderNo,orderValue,campaignID,pointsUsed,equivalentValue,status,shopName,dateCreated)
-        return {"status":data}
-
-    def create_user(self,shopURL,firstName,lastName,adminEmail,adminPhone,paymentEnableStatus,subscriptionMode,subscriptionPlanID,validityDate,dateCreated,status,shopName):
-        create_user = user_dao.create_new_user(shopURL,firstName,lastName,adminEmail,adminPhone,paymentEnableStatus,subscriptionMode,subscriptionPlanID,validityDate,dateCreated,status,shopName)
-        db=mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="root"
-        )
-        mycursor=db.cursor()
-        mycursor.execute("CREATE DATABASE {}".format(shopName))
-        new_db=mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="root",
-            database="{}".format(shopName.lower())
-        )
-        my_new_cursor=new_db.cursor()
-        my_new_cursor.execute("CREATE TABLE Tokens (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,clientID INTEGER(10) NOT NULL, shopURL VARCHAR(150) NOT NULL, accessToken VARCHAR(255) NOT NULL, validity date NOT NULL)")
-        my_new_cursor.execute("CREATE TABLE Reward_Points (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, orderNo INTEGER NOT NULL, orderValue INTEGER NOT NULL, campaignID INTEGER NOT NULL,pointsRewarded INTEGER NOT NULL,status enum('T','F') NOT NULL, dateCreated date NOT NULL)")
-        my_new_cursor.execute("CREATE TABLE Total_Points (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, totalPointsEarned INTEGER NOT NULL, totalPointsRedeemed INTEGER NOT NULL, totalPoints INTEGER NOT NULL, dateUpdated datetime NOT NULL)")
-        my_new_cursor.execute("CREATE TABLE Redeem_History (id INTEGER NOT NULL AUTO_INCREMENT PRIMARY KEY,customerID INTEGER(10) NOT NULL, customerEmail VARCHAR(150) NOT NULL, orderNo INTEGER NOT NULL, orderValue INTEGER NOT NULL, campaignID INTEGER NOT NULL, pointsUsed INTEGER NOT NULL, equivalentValue INTEGER NOT NULL, status enum('T','F') NOT NULL, dateCreated datetime NOT NULL)")
-        return {"status":create_user}
+    def list_users_byplanname_length(self,name):
+        token=linkedintokens_dao.list_users_byplanname_length(name)
+        result = plans_schema.dump(token)
+        length_result=len(result)
+        return length_result
 
 user_service = UserService()
