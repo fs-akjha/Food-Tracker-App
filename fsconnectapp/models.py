@@ -10,7 +10,7 @@ from sqlalchemy import Column, Integer, DateTime
 class LinkedinTokens(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     clientID = db.Column(db.String(255), unique=False, nullable=False)
-    accessToken= db.Column(db.String(255), unique=True, nullable=False)
+    accessToken= db.Column(db.Text,unique=False, nullable=False)
     status = db.Column(db.Integer, server_default=text("1"))
     validityDate=db.Column(DateTime, default=datetime.datetime.utcnow)
     dateCreated= db.Column(TIMESTAMP, nullable=False, server_default=text("CURRENT_TIMESTAMP"))

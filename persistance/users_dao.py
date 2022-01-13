@@ -21,11 +21,11 @@ class LinkedinTokens:
         session.close()
         return "200"
 
-    def get_plan_detail_byid(self, id):
+    def list_all_tokens(self, clientID):
         session = Session()
         result =  (
             session.query(self.model)
-                .filter_by(created_by_user_id=id)
+                .filter_by(clientID=clientID)
         )
         session.close()
         return result
@@ -36,13 +36,21 @@ class LinkedinTokens:
         session.close()
         return result
 
-    def list_users_byplanname_length(self, name):
+    def list_users_byclientid(self, clientID):
         session = Session()
         result =  (
             session.query(self.model)
-                .filter_by(name=name)
+                .filter_by(clientID=clientID)
         )
         session.close()
         return result
+    
+    def create_new_user(self,clientID,accessToken,validityDate,dateCreated):
+        session = Session()
+        new_user = self.model(clientID=clientID,accessToken=accessToken,validityDate=validityDate,dateCreated=dateCreated)
+        session.add(new_user)
+        session.commit()
+        session.close()
+        return "200"
 
 linkedintokens_dao=LinkedinTokens(models.LinkedinTokens)

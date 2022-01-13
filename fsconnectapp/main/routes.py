@@ -16,68 +16,67 @@ import hashlib
 import tweepy
 from tweepy import OAuthHandler
 import json
+from fsconnectapp.main import app
 from werkzeug.security import generate_password_hash,check_password_hash
+import urllib.request, urllib.parse, urllib.error
+import xml.etree.ElementTree as ET
+import urllib.request
+from bs4 import BeautifulSoup
+
 
 
 CORS(main)
 
-access_token='159322919-5G9OzdGcSFYV0NJIDsoYR5rQyZRqrApoVAeKKmAv'
-access_token_secret='jtmH2khGD4LfXJhOB4tH4bGcn33CakmwgPdDyRhoTfv6V'
-consumer_key='YTC8eA09AENEgvCf7lFdHcXha'
-consumer_secret='4K1EJlU8NPyAUL1NTO6ZzEzxLG4oTTIA9hSahuN3tvbKP2dZPU'
-CLIENT_ID='86v7rsgdm7g3lx'
-CLIENT_SECRET='fbjsrylUhOic7bSz'
+access_token=app.config['ACCESS_TOKEN']
+access_token_secret=app.config['ACCESS_TOKEN_SECRET']
+consumer_key=app.config['CONSUMER_KEY']
+consumer_secret=app.config['CONSUMER_SECRET']
 
 auth=OAuthHandler(consumer_key,consumer_secret)
 auth.set_access_token(access_token,access_token_secret)
 api=tweepy.API(auth)
 api = tweepy.API(auth,wait_on_rate_limit = True)
 
-@main.route('/get_auth_link',methods=['GET'])
-def get_auth_link():
-    URL = "https://www.linkedin.com/oauth/v2/authorization"
-    redirecturi="http://127.0.0.1:5000/redirect_to_code"
-    client_id=CLIENT_ID
-    redirect_uri = redirecturi
-    scope='r_organization_social'
-    PARAMS = {'response_type':'code', 'client_id':client_id,  'redirect_uri':redirect_uri, 'scope':scope}
-    r = requests.get(url = URL, params = PARAMS)
-    return_url = r.url
-    print('Please copy the URL and paste it in browser for getting authentication code')
-    return jsonify(return_url)
+# @main.route('/get_auth_link',methods=['GET'])
+# @cross_origin()
+# def get_auth_link():
+#     URL = "https://www.linkedin.com/oauth/v2/authorization"
+#     redirecturi="http://127.0.0.1:5000/redirect_to_code"
+#     client_id=CLIENT_ID
+#     redirect_uri = redirecturi
+#     scope='r_organization_social'
+#     PARAMS = {'response_type':'code', 'client_id':client_id,  'redirect_uri':redirect_uri, 'scope':scope}
+#     r = requests.get(url = URL, params = PARAMS)
+#     return_url = r.url
+#     print('Please copy the URL and paste it in browser for getting authentication code')
+#     return jsonify(return_url)
 
 @main.route('/redirect_to_code',methods=['GET','POST'])
+@cross_origin()
 def redirect_code():
     args=request.args
-    Auth_code=args['code']
-    headers = {'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'OAuth gem v0.4.4'}
-    AUTH_CODE = Auth_code
-    ACCESS_TOKEN_URL = 'https://www.linkedin.com/oauth/v2/accessToken'
-    redirecturi="http://127.0.0.1:5000/redirect_to_code"
-    client_id=CLIENT_ID
-    redirect_uri = redirecturi
-    client_secret=CLIENT_SECRET
-    PARAM = {'grant_type': 'authorization_code',
-      'code': AUTH_CODE,
-      'redirect_uri': redirect_uri,
-      'client_id': client_id,
-      'client_secret': client_secret}
-    response = requests.post(ACCESS_TOKEN_URL, data=PARAM, headers=headers, timeout=600)
-    data = response.json()
-    access_token = data['access_token']
-    URL = "https://api.linkedin.com/v2/posts"
-    headers = {'Content-Type': 'application/x-www-form-urlencoded','Authorization':'Bearer {}'.format(access_token),'X-Restli-Protocol-Version':'2.0.0'}
-    response = requests.get(url=URL, headers=headers)
-    print(response.json())
-    get_twitter_data(access_token)
-    return response.json()
-
-@main.route('/twitter_data',methods=['GET'])
-def get_twitter_data(access_token):
+    try:
+        Auth_code=args['code']
+        response=user_service.creating_new_token(Auth_code)
+    except:
+        print("In Except")
     username="FleetStudio"
     users='fleetstudio'
-    print("in Twitter:- ",access_token)
-    all_data=[]
+    all_datas=[]
+    link_post=user_service.get_posts_data()
+    print(link_post)
+    last_name=link_post['localizedLastName']
+    first_name=link_post['localizedFirstName']
+    profile_pic=link_post['profilePicture']
+    id=link_post['id']
+    link_data={
+        "Id":id,
+        "First_name":first_name,
+        "Last_name":last_name,
+        "Profile_Picture":profile_pic,
+        "Platform":"Linkedin"
+    }
+    all_datas.append(link_data)
     tweets = api.user_timeline(screen_name=username,count=11,tweet_mode = 'extended')
     for tweet in tweets:
         text_data=tweet.full_text
@@ -103,5 +102,92 @@ def get_twitter_data(access_token):
             "user_url":user_url,
             "platform":"Twitter"
         }
-        all_data.append(data)
-    return jsonify(all_data)
+        all_datas.append(data)
+    siteurl = "https://api.rss2json.com/v1/api.json?rss_url=https://fleetstudio.medium.com/feed"
+    page = requests.get(siteurl)
+    all_data=page.json()
+    med_status=all_data['status']
+    med_feeds=all_data['feed']
+    med_items=all_data['items']
+    for mi in med_items:
+        post_title=mi['title']
+        pub_date=mi['pubDate']
+        post_link=mi['link']
+        post_guid=mi['guid']
+        author=mi['author']
+        thumbnail=mi['thumbnail']
+        post_description=mi['description']
+        categories=mi['categories']
+        mi_data={
+            "URL":med_feeds['url'],
+            "Title":med_feeds['title'],
+            "Link":med_feeds['link'],
+            "Description":med_feeds['description'],
+            "Image":med_feeds['image'],
+            "PostTitle":post_title,
+            "PublishedDate":pub_date,
+            "PostLink":post_link,
+            "PostGUID":post_guid,
+            "Author":author,
+            "Thumbnail":thumbnail,
+            "PostDescription":post_description,
+            "Categories":categories,
+            "platform":"Medium"
+        }
+        all_datas.append(mi_data)
+    return jsonify(all_datas)
+
+@main.route('/get_medium_data',methods=['GET'])
+@cross_origin()
+def get_medium_data():
+    siteurl = "https://api.rss2json.com/v1/api.json?rss_url=https://fleetstudio.medium.com/feed"
+    page = requests.get(siteurl)
+    all_data=page.json()
+    med_status=all_data['status']
+    med_feeds=all_data['feed']
+    med_items=all_data['items']
+    mf_data={
+        "URL":med_feeds['url'],
+        "Title":med_feeds['title'],
+        "Link":med_feeds['link'],
+        "Description":med_feeds['description'],
+        "Image":med_feeds['image']
+    }
+    for mi in med_items:
+        post_title=mi['title']
+        pub_date=mi['pubDate']
+        post_link=mi['link']
+        post_guid=mi['guid']
+        author=mi['author']
+        thumbnail=mi['thumbnail']
+        post_description=mi['description']
+        categories=mi['categories']
+        mi_data={
+            "PostTitle":post_title,
+            "PublishedDate":pub_date,
+            "PostLink":post_link,
+            "PostGUID":post_guid,
+            "Author":author,
+            "Thumbnail":thumbnail,
+            "PostDescription":post_description,
+            "Categories":categories
+        }
+    merged_dict={**mf_data,**mi_data}
+    return merged_dict
+
+@main.route('/twitter_data',methods=['GET'])
+@cross_origin()
+def get_twitter_data():
+    result_users=user_service.list_users_by_length_withoutcid()
+    if(result_users<1):
+        URL = "https://www.linkedin.com/oauth/v2/authorization"
+        redirecturi="https://9c7a-2409-4066-2-d519-e429-5651-45d1-b00e.ngrok.io/redirect_to_code"
+        scope='r_liteprofile'
+        result=user_service.create_auth_link(URL,redirecturi,scope)
+        return result
+    else:
+        URL = "https://www.linkedin.com/oauth/v2/authorization"
+        redirecturi="https://9c7a-2409-4066-2-d519-e429-5651-45d1-b00e.ngrok.io/redirect_to_code"
+        scope='r_liteprofile'
+        user_service.updating_existing_token(URL,redirecturi,scope)
+        return redirect('https://9c7a-2409-4066-2-d519-e429-5651-45d1-b00e.ngrok.io/redirect_to_code')
