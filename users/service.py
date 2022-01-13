@@ -34,7 +34,7 @@ class UserService:
             if(result<1):
                 AUTH_CODE = Auth_code
                 ACCESS_TOKEN_URL = 'https://www.linkedin.com/oauth/v2/accessToken'
-                redirecturi="https://9c7a-2409-4066-2-d519-e429-5651-45d1-b00e.ngrok.io/redirect_to_code"
+                redirecturi="https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code"
                 headers = {'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'OAuth gem v0.4.4'}
                 client_id=app.config['CLIENT_ID']
                 redirect_uri = redirecturi
@@ -95,7 +95,7 @@ class UserService:
         for i in r1_data:
             token=i['accessToken']
         access_token=token
-        URL = "https://api.linkedin.com/v2/me"
+        URL = "https://api.linkedin.com/v2/people/id=-f_Ut43FoQ?projection=(id,localizedFirstName,localizedLastName)"
         headers = {'Content-Type': 'application/x-www-form-urlencoded','Authorization':'Bearer {}'.format(access_token),'X-Restli-Protocol-Version':'2.0.0'}
         response = requests.get(url=URL, headers=headers)
         return response.json()

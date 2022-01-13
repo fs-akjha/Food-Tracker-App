@@ -65,18 +65,18 @@ def redirect_code():
     all_datas=[]
     link_post=user_service.get_posts_data()
     print(link_post)
-    last_name=link_post['localizedLastName']
-    first_name=link_post['localizedFirstName']
-    profile_pic=link_post['profilePicture']
-    id=link_post['id']
-    link_data={
-        "Id":id,
-        "First_name":first_name,
-        "Last_name":last_name,
-        "Profile_Picture":profile_pic,
-        "Platform":"Linkedin"
-    }
-    all_datas.append(link_data)
+    # last_name=link_post['localizedLastName']
+    # first_name=link_post['localizedFirstName']
+    # # profile_pic=link_post['profilePicture']
+    # id=link_post['id']
+    # link_data={
+    #     "Id":id,
+    #     "First_name":first_name,
+    #     "Last_name":last_name,
+    #     # "Profile_Picture":profile_pic,
+    #     "Platform":"Linkedin"
+    # }
+    # all_datas.append(link_data)
     tweets = api.user_timeline(screen_name=username,count=11,tweet_mode = 'extended')
     for tweet in tweets:
         text_data=tweet.full_text
@@ -181,13 +181,13 @@ def get_twitter_data():
     result_users=user_service.list_users_by_length_withoutcid()
     if(result_users<1):
         URL = "https://www.linkedin.com/oauth/v2/authorization"
-        redirecturi="https://9c7a-2409-4066-2-d519-e429-5651-45d1-b00e.ngrok.io/redirect_to_code"
-        scope='r_liteprofile'
+        redirecturi="https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code"
+        scope='r_organization_social'
         result=user_service.create_auth_link(URL,redirecturi,scope)
         return result
     else:
         URL = "https://www.linkedin.com/oauth/v2/authorization"
-        redirecturi="https://9c7a-2409-4066-2-d519-e429-5651-45d1-b00e.ngrok.io/redirect_to_code"
-        scope='r_liteprofile'
+        redirecturi="https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code"
+        scope='r_organization_social'
         user_service.updating_existing_token(URL,redirecturi,scope)
-        return redirect('https://9c7a-2409-4066-2-d519-e429-5651-45d1-b00e.ngrok.io/redirect_to_code')
+        return redirect('https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code')
