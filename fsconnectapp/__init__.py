@@ -5,7 +5,7 @@ from .extensions import db
 
 def create_app():
     app=Flask(__name__)
-    app.config.from_pyfile('C:\Akash Files\ShopifyAPp\Shopify Extension Application\config.ini')
+    app.config.from_pyfile('C:\Akash Files\FleetStudioCo\FSConnectBackendcode\config.ini')
     app.config['SECRET_KEY']='thisissecret' 
     # app.config.from_pyfile('/home/fsdev/python-instance/ShopifyExtensionApplication_backend/config.ini')
     app.config['SQLALCHEMY_DATABASE_URI']=app.config['MYSQL_URI']

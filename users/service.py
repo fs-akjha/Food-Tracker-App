@@ -34,13 +34,14 @@ class UserService:
             if(result<1):
                 AUTH_CODE = Auth_code
                 ACCESS_TOKEN_URL = 'https://www.linkedin.com/oauth/v2/accessToken'
-                redirecturi="https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code"
+                redirecturi="https://1cfd-2409-4066-10e-6bd7-85f7-9a95-b096-5f16.ngrok.io/redirect_to_code"
                 headers = {'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'OAuth gem v0.4.4'}
                 client_id=app.config['CLIENT_ID']
                 redirect_uri = redirecturi
                 now = datetime.now()
                 starts_at=now
                 validity=starts_at + relativedelta(months=+2)
+                refresh_token_validityDate=starts_at + relativedelta(months=+12)
                 dateCreated=now
                 client_secret=app.config['CLIENT_SECRET']
                 PARAM = {'grant_type': 'authorization_code',
@@ -51,20 +52,44 @@ class UserService:
                 response = requests.post(ACCESS_TOKEN_URL, data=PARAM, headers=headers, timeout=600)
                 data = response.json()
                 access_token = data['access_token']
+                refresh_accessToken=data['refresh_token']
                 # results=user_service.create_token(app.config['CLIENT_ID'],access_token,validity,dateCreated)
-                result=user_service.create_user(clientID=app.config['CLIENT_ID'],accessToken=access_token,validityDate=validity,dateCreated=dateCreated)
+                result=user_service.create_user(clientID=app.config['CLIENT_ID'],accessToken=access_token,refresh_accessToken=refresh_accessToken,validityDate=validity,refresh_token_validityDate=refresh_token_validityDate,dateCreated=dateCreated)
                 return {"Message":"The Token Generation part has been done."}
             else:
-                pass
+                AUTH_CODE = Auth_code
+                ACCESS_TOKEN_URL = 'https://www.linkedin.com/oauth/v2/accessToken'
+                redirecturi="https://1cfd-2409-4066-10e-6bd7-85f7-9a95-b096-5f16.ngrok.io/redirect_to_code"
+                headers = {'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'OAuth gem v0.4.4'}
+                client_id=app.config['CLIENT_ID']
+                redirect_uri = redirecturi
+                now = datetime.now()
+                starts_at=now
+                validity=starts_at + relativedelta(months=+2)
+                refresh_token_validityDate=starts_at + relativedelta(months=+12)
+                dateCreated=now
+                client_secret=app.config['CLIENT_SECRET']
+                PARAM = {'grant_type': 'authorization_code',
+                'code': AUTH_CODE,
+                'redirect_uri': redirect_uri,
+                'client_id': client_id,
+                'client_secret': client_secret}
+                response = requests.post(ACCESS_TOKEN_URL, data=PARAM, headers=headers, timeout=600)
+                data = response.json()
+                access_token = data['access_token']
+                refresh_accessToken=data['refresh_token']
+                # results=user_service.create_token(app.config['CLIENT_ID'],access_token,validity,dateCreated)
+                result=user_service.update_old_user_created(clientID=app.config['CLIENT_ID'],accessToken=access_token,refresh_accessToken=refresh_accessToken,validityDate=validity,refresh_token_validityDate=refresh_token_validityDate,dateCreated=dateCreated)
         except:
             return{"Message":"Either Code Value is Incorrect or Shop Name is Wrong","status":0},400
 
-    def create_user(self,clientID,accessToken,validityDate,dateCreated):
-        create_user = linkedintokens_dao.create_new_user(clientID,accessToken,validityDate,dateCreated)
+    def create_user(self,clientID,accessToken,refresh_accessToken,validityDate,refresh_token_validityDate,dateCreated):
+        create_user = linkedintokens_dao.create_new_user(clientID,accessToken,refresh_accessToken,validityDate,refresh_token_validityDate,dateCreated)
         return {"status":create_user}
 
     def updating_existing_token(self,URL,redirecturi,scope):
         try:
+            import datetime
             client_id=app.config['CLIENT_ID']
             result = user_service.list_all_tokens(client_id)
             token_length=user_service.list_users_by_length(client_id)
@@ -72,12 +97,12 @@ class UserService:
             val=0
             for i in statu:
                 val=i['validityDate']
-            valid_date=val
-            current_date=datetime.date.today()
+            valid_date=val.split('T')[0]
+            current_dates=str(datetime.datetime.today())
+            current_date=current_dates.split(' ')[0]
             print("Yes In Updating Token Part")
-            if valid_date<=current_date:
-                result=user_service.create_auth_link(URL,redirecturi,scope)
-                return result
+            if valid_date<current_date:
+                result=user_service.update_auth_token(redirecturi)
             else:
                 print("Herer in no where")
                 pass
@@ -89,13 +114,17 @@ class UserService:
         create_plans = linkedintokens_dao.add_tokens(cat_id,name,icon,cost,caption,dateCreated,plan_data)
         return {"status":create_plans}
 
+    def update_old_user_created(self,clientID,accessToken,refresh_accessToken,validityDate,refresh_token_validityDate,dateCreated):
+        token=linkedintokens_dao.update_old_user_created(clientID,accessToken,refresh_accessToken,validityDate,refresh_token_validityDate,dateCreated)
+        return "200"
+
     def get_posts_data(self):
         r1=user_service.list_all_tokens(clientID=app.config['CLIENT_ID'])
         r1_data=r1['users']
         for i in r1_data:
             token=i['accessToken']
         access_token=token
-        URL = "https://api.linkedin.com/v2/people/id=-f_Ut43FoQ?projection=(id,localizedFirstName,localizedLastName)"
+        URL = "https://api.linkedin.com/v2/ugcPosts?q=authors&start=0&count=10&authors=List(urn%3Ali%3Aorganization%3A221555)"
         headers = {'Content-Type': 'application/x-www-form-urlencoded','Authorization':'Bearer {}'.format(access_token),'X-Restli-Protocol-Version':'2.0.0'}
         response = requests.get(url=URL, headers=headers)
         return response.json()
@@ -129,5 +158,38 @@ class UserService:
         return_url = r.url
         print('Please copy the URL and paste it in browser for getting authentication code')
         return jsonify(return_url)
+
+    def update_auth_token(self,redirecturi):
+        print("In uo")
+        ACCESS_TOKEN_URL = 'https://www.linkedin.com/oauth/v2/accessToken'
+        redirecturi="https://1cfd-2409-4066-10e-6bd7-85f7-9a95-b096-5f16.ngrok.io/redirect_to_code"
+        headers = {'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': 'OAuth gem v0.4.4'}
+        client_id=app.config['CLIENT_ID']
+        redirect_uri = redirecturi
+        r1=user_service.list_all_tokens(clientID=app.config['CLIENT_ID'])
+        r1_data=r1['users']
+        for i in r1_data:
+            rftoken=i['refresh_accessToken']
+            ref_val_date=i['refresh_token_validityDate']
+        refresh_validity_date=ref_val_date.replace('T'," ")
+        date_time_obj = datetime.strptime(refresh_validity_date, '%Y-%m-%d %H:%M:%S')
+        refresh_token=rftoken
+        now = datetime.now()
+        starts_at=now
+        validity=starts_at + relativedelta(months=+2)
+        refresh_token_validityDate=date_time_obj + relativedelta(days=-59)
+        dateCreated=now
+        client_secret=app.config['CLIENT_SECRET']
+        PARAM = {'grant_type': 'refresh_token',
+        'refresh_token': refresh_token,
+        'client_id': client_id,
+        'client_secret': client_secret}
+        response = requests.post(ACCESS_TOKEN_URL, data=PARAM, headers=headers, timeout=600)
+        data = response.json()
+        access_token = data['access_token']
+        refresh_accessToken=data['refresh_token']
+        result=user_service.update_old_user_created(clientID=app.config['CLIENT_ID'],accessToken=access_token,refresh_accessToken=refresh_accessToken,validityDate=validity,refresh_token_validityDate=refresh_token_validityDate,dateCreated=dateCreated)
+        return "Access Token Updated"
+        
 
 user_service = UserService()

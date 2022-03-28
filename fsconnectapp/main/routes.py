@@ -22,8 +22,9 @@ import urllib.request, urllib.parse, urllib.error
 import xml.etree.ElementTree as ET
 import urllib.request
 from bs4 import BeautifulSoup
-
-
+from dateutil.relativedelta import *
+from datetime import datetime
+import re
 
 CORS(main)
 
@@ -63,20 +64,41 @@ def redirect_code():
     username="FleetStudio"
     users='fleetstudio'
     all_datas=[]
+    hash_data=[]
+    all_hash=[]
     link_post=user_service.get_posts_data()
-    print(link_post)
-    # last_name=link_post['localizedLastName']
-    # first_name=link_post['localizedFirstName']
-    # # profile_pic=link_post['profilePicture']
-    # id=link_post['id']
-    # link_data={
-    #     "Id":id,
-    #     "First_name":first_name,
-    #     "Last_name":last_name,
-    #     # "Profile_Picture":profile_pic,
-    #     "Platform":"Linkedin"
-    # }
-    # all_datas.append(link_data)
+    linkedin_ele=link_post['elements']
+    for i in linkedin_ele:
+        post_description=i['specificContent']['com.linkedin.ugc.ShareContent']['shareCommentary']['text']
+        thumbnail_linkedin_post=i['specificContent']['com.linkedin.ugc.ShareContent']['media']
+        categories_linkedin=i['specificContent']['com.linkedin.ugc.ShareContent']['shareFeatures']
+        hashes=categories_linkedin['hashtags']
+        create_at=i['created']['time']
+        link_to_post=i['id']
+        url_to_post="https://www.linkedin.com/feed/update/{}/".format(link_to_post)
+        create_at_lnkdn=datetime.utcfromtimestamp(create_at/1000).strftime('%Y-%m-%d %H:%M:%S')
+        themessage = 'urn:li:hashtag:'   
+        self_criticism = ''
+        final_message = [i.replace(themessage, self_criticism) for i in hashes]
+        for thumb_image in thumbnail_linkedin_post:
+            thumb_nail = list()
+        for j in range(0, len(thumb_image['thumbnails'])):
+            thumb_nail.append(thumb_image['thumbnails'][j]['url'])
+        thumbnail_linkedin=thumb_nail
+        platform="Linkedin"
+        id='221555'
+        Author="Fleet Studio"
+        linked_data={
+            "Id":id,
+            "platform":platform,
+            "Thumbnail":thumbnail_linkedin,
+            "PostDescription":post_description,
+            "Categories":final_message,
+            "PublishedDate":create_at_lnkdn,
+            "PostLink":url_to_post,
+            "Author":Author
+        }
+        all_datas.append(linked_data)
     tweets = api.user_timeline(screen_name=username,count=11,tweet_mode = 'extended')
     for tweet in tweets:
         text_data=tweet.full_text
@@ -89,17 +111,36 @@ def redirect_code():
         entities=str(tweet.entities['urls'])
         user_name=tweet.user.name
         user_url=tweet.user.url
+        author_twitter=tweet.author.name
+        screenname = tweet.user.screen_name
+        hashtags = tweet.entities['hashtags']
+        hashtext = list()
+        for j in range(0, len(hashtags)):
+            hashtext.append(hashtags[j]['text'])
+        try:
+            if 'media' in tweet.entities:
+                for image in  tweet.entities['media']:
+                    thumbnail_twitter=image['media_url']
+            thumbnail_twitters=thumbnail_twitter
+        except:
+            thumbnail_twitters=""
+        post_url="https://twitter.com/{}/status/{}".format(screenname,ID)
         data={
             "Id":ID,
+            "Author":author_twitter,
             "user_id":user_id,
-            "Post":text_data,
-            "Created_at":created_at,
+            "PostDescription":text_data,
+            "PublishedDate":created_at,
             "Source":source,
             "default_profile":profile_image_url,
             "profile_image_url_https":profile_image_url_https,
             "entities":entities,
             "user_name":user_name,
+            "Screen_Name":screenname,
             "user_url":user_url,
+            "Thumbnail":thumbnail_twitters,
+            "PostLink":post_url,
+            "Categories":hashtext,
             "platform":"Twitter"
         }
         all_datas.append(data)
@@ -121,12 +162,12 @@ def redirect_code():
         mi_data={
             "URL":med_feeds['url'],
             "Title":med_feeds['title'],
-            "Link":med_feeds['link'],
+            "PostLink":med_feeds['link'],
             "Description":med_feeds['description'],
-            "Image":med_feeds['image'],
+            "default_profile":med_feeds['image'],
             "PostTitle":post_title,
             "PublishedDate":pub_date,
-            "PostLink":post_link,
+            "Link":post_link,
             "PostGUID":post_guid,
             "Author":author,
             "Thumbnail":thumbnail,
@@ -181,13 +222,31 @@ def get_twitter_data():
     result_users=user_service.list_users_by_length_withoutcid()
     if(result_users<1):
         URL = "https://www.linkedin.com/oauth/v2/authorization"
-        redirecturi="https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code"
+        redirecturi="https://1cfd-2409-4066-10e-6bd7-85f7-9a95-b096-5f16.ngrok.io/redirect_to_code"
         scope='r_organization_social'
         result=user_service.create_auth_link(URL,redirecturi,scope)
         return result
     else:
         URL = "https://www.linkedin.com/oauth/v2/authorization"
-        redirecturi="https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code"
+        redirecturi="https://1cfd-2409-4066-10e-6bd7-85f7-9a95-b096-5f16.ngrok.io/redirect_to_code"
         scope='r_organization_social'
-        user_service.updating_existing_token(URL,redirecturi,scope)
-        return redirect('https://6a71-2409-4066-103-5d5d-bd3c-f13e-73b8-9761.ngrok.io/redirect_to_code')
+        client_id=app.config['CLIENT_ID']
+        user_data = user_service.list_all_tokens(client_id)
+        token_length=user_service.list_users_by_length(client_id)
+        statu=user_data['users']
+        ref_val=0
+        for i in statu:
+                ref_val=i['refresh_token_validityDate']
+        ref_valid_date=ref_val.split('T')[0]
+        now = datetime.now()
+        starts_at=now
+        validi=starts_at + relativedelta(months=+2)
+        validity_date=str(validi)
+        validity=validity_date.split(' ')[0]
+        if(validity<ref_valid_date):
+            user_service.updating_existing_token(URL,redirecturi,scope)
+            return redirect('https://1cfd-2409-4066-10e-6bd7-85f7-9a95-b096-5f16.ngrok.io/redirect_to_code')
+        else:
+            print("testing")
+            result=user_service.create_auth_link(URL,redirecturi,scope)
+            return result

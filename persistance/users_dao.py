@@ -45,12 +45,20 @@ class LinkedinTokens:
         session.close()
         return result
     
-    def create_new_user(self,clientID,accessToken,validityDate,dateCreated):
+    def create_new_user(self,clientID,accessToken,refresh_accessToken,validityDate,refresh_token_validityDate,dateCreated):
         session = Session()
-        new_user = self.model(clientID=clientID,accessToken=accessToken,validityDate=validityDate,dateCreated=dateCreated)
+        new_user = self.model(clientID=clientID,accessToken=accessToken,refresh_accessToken=refresh_accessToken,validityDate=validityDate,refresh_token_validityDate=refresh_token_validityDate,dateCreated=dateCreated)
         session.add(new_user)
         session.commit()
         session.close()
         return "200"
+
+    def update_old_user_created(self,clientID,accessToken,refresh_accessToken,validityDate,refresh_token_validityDate,dateCreated):
+        session = Session()
+        session.query(self.model).filter_by(clientID=clientID).update({'accessToken': accessToken,
+        'refresh_accessToken':refresh_accessToken,'validityDate':validityDate,'refresh_token_validityDate':refresh_token_validityDate,'dateCreated':dateCreated},synchronize_session=False)
+        session.commit()
+        session.close()
+        return True
 
 linkedintokens_dao=LinkedinTokens(models.LinkedinTokens)
